@@ -2,20 +2,32 @@ package com.lin.alipay.utils;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.openqa.selenium.Cookie;
 
+/**
+ * UttpUtils
+ * @author lin
+ * 2016-10-15
+ */
 public class HttpUtils {
 	
 	private static CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -39,11 +51,69 @@ public class HttpUtils {
 	        get.setHeader("Accept", "text/html, application/xhtml+xml, */*");  
 	        get.setHeader("Accept-Encoding", "gzip, deflate");  
 	        get.setHeader("Accept-Language", "en-US");  
-	        get.setHeader("User-Agent", "User-Agent: Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");  
+	        get.setHeader("User-Agent", "User-Agent: Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
+	        
 			response = httpClient.execute(get, context);
+			
 			HttpEntity entity = response.getEntity();
 			content = EntityUtils.toString(entity);
+			
 			EntityUtils.consume(entity);//关闭
+			
+			return content;
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (response != null) {
+				try {
+					response.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		return content;
+	}
+	
+	/**
+	 * 发送GET命令,并设置Cookies.
+	 */
+	public static String sendGet(String url,String host,Set<Cookie> cookies) {
+		
+		/**
+		 * 设置Cookie，这里把Selenium登录成功的Cookie放进HttpClient的context
+		 */
+        CookieStore cookieStore = new BasicCookieStore(); 
+        for(Cookie cookie : cookies){
+        	BasicClientCookie bc = new BasicClientCookie(cookie.getName(),cookie.getValue());
+        	bc.setPath("/");
+        	bc.setDomain(host);
+        	bc.setVersion(0);
+        	cookieStore.addCookie(bc);
+        }
+//        httpClient = HttpClients.custom()
+//                .setDefaultCookieStore(cookieStore) 
+//                .build();
+        //httpContext.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore); 
+        context.setAttribute(HttpClientContext.COOKIE_STORE, cookieStore);
+		
+		CloseableHttpResponse response = null;
+		String content = null;
+		try {
+			HttpGet get = new HttpGet(url);
+			
+			//设置httpGet的头部参数信息   
+	        get.setHeader("Accept", "text/html, application/xhtml+xml, */*");  
+	        get.setHeader("Accept-Encoding", "gzip, deflate");  
+	        get.setHeader("Accept-Language", "en-US");  
+	        get.setHeader("User-Agent", "User-Agent: Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");  
+	        
+			response = httpClient.execute(get, context);
+			
+			HttpEntity entity = response.getEntity();
+			content = EntityUtils.toString(entity);
+			
+			EntityUtils.consume(entity);//关闭
+			
 			return content;
 		} catch (Exception e) {
 			e.printStackTrace();
