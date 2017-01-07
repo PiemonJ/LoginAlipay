@@ -32,7 +32,7 @@ public class Login {
 	
 	public static final String LOGIN_ACCOUNT = "18820691730";//支付宝账号
 	
-	public static final String LOGIN_PASSWORD = "zhi18820691730";//支付宝密码
+	public static final String LOGIN_PASSWORD = "********************";//支付宝密码
 	
 	public static WebDriver webDriver;
 	
